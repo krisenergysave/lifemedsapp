@@ -16,7 +16,7 @@ export default function AuthGuard({ children }) {
   useEffect(() => {
     const checkAuthAndRedirect = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await authApi.isAuthenticated();
         
         // If user is authenticated and on a landing page, redirect to Dashboard
         if (isAuth && landingPages.some(page => location.pathname.includes(page))) {

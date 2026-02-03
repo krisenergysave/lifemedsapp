@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { findUserByEmail } from './db.ts';
 
 function base32Decode(str) {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -58,7 +58,6 @@ async function verifyTOTPAsync(secret, code, window = 1) {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
     const { email, code } = await req.json();
 
     if (!email || !code) {
@@ -66,22 +65,18 @@ Deno.serve(async (req) => {
     }
 
     // Fetch user by email
-    const users = await base44.asServiceRole.entities.User.filter({
-      email: email
-    });
+    const user = await findUserByEmail(email);
 
-    if (!users || users.length === 0) {
+    if (!user) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const user = users[0];
-
-    if (!user.two_factor_enabled || !user.two_factor_secret) {
+    if (!user.two_factor_enabled || !user.totp_secret) {
       return Response.json({ error: '2FA not enabled for this user' }, { status: 400 });
     }
 
     // Verify TOTP code
-    const isValid = await verifyTOTPAsync(user.two_factor_secret, code);
+    const isValid = await verifyTOTPAsync(user.totp_secret, code);
 
     return Response.json({ valid: isValid });
   } catch (error) {

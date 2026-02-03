@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -18,7 +18,7 @@ export default function SubscriptionGuard({ children }) {
 
   const checkSubscription = async () => {
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await authApi.me();
       setUser(currentUser);
 
       // If no trial dates set, initialize trial
@@ -27,7 +27,7 @@ export default function SubscriptionGuard({ children }) {
         const trialEnd = new Date();
         trialEnd.setDate(trialEnd.getDate() + 14);
 
-        await base44.auth.updateMe({
+        await authApi.updateMe({
           trial_start_date: now.toISOString(),
           trial_end_date: trialEnd.toISOString(),
           subscription_status: 'trial'
@@ -46,7 +46,7 @@ export default function SubscriptionGuard({ children }) {
 
         // Update status if trial expired but status still shows trial
         if (currentUser.subscription_status === 'trial' && !isTrialActive) {
-          await base44.auth.updateMe({ subscription_status: 'expired' });
+          await authApi.updateMe({ subscription_status: 'expired' });
         }
       }
 

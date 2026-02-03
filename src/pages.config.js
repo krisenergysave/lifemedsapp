@@ -75,6 +75,7 @@ import Terms from './pages/Terms';
 import Updates from './pages/Updates';
 import Verify2FA from './pages/Verify2FA';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 
 
 export const PAGES = {
@@ -105,6 +106,7 @@ export const PAGES = {
     "Terms": Terms,
     "Updates": Updates,
     "Login": Login,
+    "ResetPassword": ResetPassword,
     "Verify2FA": Verify2FA,
 }
 

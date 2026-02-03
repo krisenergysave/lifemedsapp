@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -26,7 +26,7 @@ export default function Reminders() {
   });
 
   useEffect(() => {
-    base44.auth.me().then((currentUser) => {
+    authApi.me().then((currentUser) => {
       setUser(currentUser);
       // Load notification preferences from user metadata
       if (currentUser.notification_settings) {
@@ -62,7 +62,7 @@ export default function Reminders() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: (data) => base44.auth.updateMe(data),
+    mutationFn: (data) => authApi.updateMe(data),
     onSuccess: () => {
       toast.success('Notification settings updated');
     },

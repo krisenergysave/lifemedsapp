@@ -12,13 +12,15 @@ export default function GoogleLoginButton({ redirectTo = '/dashboard' }) {
     try {
       // POST the ID token to your server endpoint which should verify it
       // and create a session for the user.
-      const res = await fetch('/api/google-login', {
+      const res = await fetch('/api/googleLogin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: idToken }),
+        credentials: 'include' // ensure cookies from server are set
       });
       const data = await res.json();
       if (data.success) {
+        // Server sets a secure HTTP-only cookie for the session; reload to pick up auth state
         window.location.href = redirectTo;
       } else {
         console.error('Server rejected Google login', data);

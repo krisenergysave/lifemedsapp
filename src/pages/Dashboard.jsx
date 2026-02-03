@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -29,12 +29,12 @@ export default function Dashboard() {
   const syncEngine = useSyncEngine();
 
   useEffect(() => {
-    base44.auth.me().then(async (currentUser) => {
+    authApi.me().then(async (currentUser) => {
       setUser(currentUser);
       // Update last_seen timestamp
       if (currentUser) {
         try {
-          await base44.auth.updateMe({ last_seen: new Date().toISOString() });
+          await authApi.updateMe({ last_seen: new Date().toISOString() });
         } catch (error) {
           console.error('Failed to update last_seen:', error);
         }
@@ -76,7 +76,7 @@ export default function Dashboard() {
   const { data: familyMembers = [] } = useQuery({
     queryKey: ['family-members'],
     queryFn: async () => {
-      const currentUser = await base44.auth.me();
+      const currentUser = await authApi.me();
       return base44.entities.FamilyMember.filter({ created_by: currentUser.email });
     },
   });

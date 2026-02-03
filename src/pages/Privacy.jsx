@@ -14,7 +14,7 @@ export default function Privacy() {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    base44.auth.isAuthenticated().then(setIsLoggedIn);
+    authApi.isAuthenticated().then(setIsLoggedIn);
   }, []);
 
   const handleBack = () => {

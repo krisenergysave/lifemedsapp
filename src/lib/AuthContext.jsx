@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
@@ -38,12 +38,8 @@ export const AuthProvider = ({ children }) => {
         setAppPublicSettings(publicSettings);
         
         // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-        }
+        // Always attempt cookie-based auth check (supports server sessions)
+        await checkUserAuth();
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);
@@ -89,19 +85,36 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserAuth = async () => {
     try {
-      // Now check if the user is authenticated
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
+      // Try cookie-based session first
+      const res = await fetch('/api/session', { method: 'GET', credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.authenticated) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+          setIsLoadingAuth(false);
+          return;
+        }
+      }
+
+      // Fallback to our API client
+      try {
+        const currentUser = await authApi.me();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+      } catch (sdkErr) {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+
       setIsLoadingAuth(false);
     } catch (error) {
       console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
-      
-      // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
+
+      if (error?.status === 401 || error?.status === 403) {
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
@@ -110,22 +123,36 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = (shouldRedirect = true) => {
+  const getCookie = (name) => {
+    if (typeof document === 'undefined') return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    if (match) return decodeURIComponent(match[2]);
+    return null;
+  };
+
+  const logout = async (shouldRedirect = true) => {
+    try {
+      const xsrf = getCookie('XSRF-TOKEN');
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}
+      });
+    } catch (err) {
+      console.warn('Logout request failed', err);
+    }
+
     setUser(null);
     setIsAuthenticated(false);
-    
+
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
+      window.location.href = '/';
     }
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    // Navigate to the central login page
+    window.location.href = '/Login';
   };
 
   return (

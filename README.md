@@ -178,3 +178,49 @@ VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 
 If you want, I can also add an example server-side verification endpoint (Node/Express or a Deno function) to this repo. 
 
+---
+
+## 🔐 Backend helpers added
+I've added example Deno functions in the `functions/` folder:
+
+- `googleLogin.ts` — Verifies Google ID tokens (`/api/googleLogin`), finds or creates a user, creates a DB-backed session record (if `Session` entity exists), issues a signed JWT in a secure HTTP-only cookie (`base44_access_token`) and also sets a non-HttpOnly `XSRF-TOKEN` cookie for CSRF protection. Configure `SESSION_SECRET` (or `SESSION_SECRETS` for rotation) and `SESSION_MAX_AGE_SECONDS` in your environment.
+- `sendPasswordReset.ts` — Generates a one-time token and sends a reset link to the user's email (`/api/sendPasswordReset`).
+- `resetPassword.ts` — Validates the token and updates the user's password (`/api/resetPassword`) and revokes DB sessions for that user (forces re-login).
+
+### 🔐 Session & Security Notes
+- Endpoints added:
+  - `GET /api/session` — Returns `{ authenticated: true, user }` if a valid session cookie is present.
+  - `POST /api/logout` — Clears the cookie and revokes the session record.
+  - `POST /api/revokeSession` — Revoke a session by `jti` (requires valid cookie + XSRF header).
+- CSRF protection: On login the server sets an `XSRF-TOKEN` cookie (readable by JS). For protected POST endpoints (e.g., `revokeSession`, `logout`), the client must send the `X-XSRF-TOKEN` header matching the cookie. Use `src/lib/xsrf.js` helper (`xsrfHeader()`) to add this header to your requests.
+- Session rotation: Set `SESSION_SECRETS` to a comma-separated list with the current secret first and previous secrets following (e.g., `new-secret,old-secret`) to allow key rotation without invalidating existing sessions immediately.
+- Revocable sessions: Sessions are stored in your **MySQL/MariaDB** `sessions` table (see `sql/create_sessions_table.sql`). Functions will mark sessions as `revoked` when appropriate.
+
+### SQL Migration & Using your own MySQL/MariaDB
+Run the included migration to create the `sessions` table in your DB:
+
+```bash
+mysql -u <user> -p <dbname> < sql/create_sessions_table.sql
+```
+
+Notes for using your own DB instead of Base44 for session storage:
+- Set DB env vars (see `.env.example`): `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`.
+- The Deno functions now use `functions/db.ts` to store session records in the `sessions` table. If DB is not configured, functions fall back to Base44 entity-based session handling.
+- A Node/Express example that writes sessions to MySQL is available at `examples/googleLoginExpressWithDb.js`.
+
+If you use a migration tool (Flyway/Knex/Sequelize/etc.), apply the `create_sessions_table.sql` via your usual workflow.
+
+If you want, I can now:
+- Add a small admin UI to view and revoke active sessions,
+- Add automatic session invalidation on password reset (already done),
+- Implement server-side session rotation tooling (e.g., revoke sessions created before a cutoff).
+
+
+Notes:
+- The `googleLogin` example verifies the token using Google's `tokeninfo` endpoint and checks `aud` against `GOOGLE_CLIENT_ID` (available as `Deno.env`).
+- The reset functions reuse the existing `VerificationCode` entity to store tokens. Adjust token expiry, email content, and password update logic to match your auth provider and security requirements.
+- Most importantly: the `googleLogin` function in this example does not create a session cookie for the user. Add session creation (HTTP-only cookie or other) after verification so the frontend is authenticated.
+
+If you'd like, I can add a ready-to-deploy Node/Express or Deno route that also sets an HTTP-only cookie for sessions. Let me know which stack you prefer.
+
+

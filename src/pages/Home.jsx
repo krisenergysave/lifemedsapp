@@ -7,8 +7,7 @@ import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import FeatureCard from '@/components/landing/FeatureCard';
 import GoogleLoginButton from '@/components/Auth/GoogleLoginButton';
-
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await authApi.isAuthenticated();
         if (isAuth) {
           navigate(createPageUrl('Dashboard'), { replace: true });
         }

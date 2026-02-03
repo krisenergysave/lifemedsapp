@@ -18,7 +18,7 @@ export default function FeedbackDialog({ open, onOpenChange }) {
     setIsSubmitting(true);
 
     try {
-      const user = await base44.auth.me();
+      const user = await authApi.me();
       
       // Send feedback via contact function
       await base44.functions.invoke('sendContactMessage', {

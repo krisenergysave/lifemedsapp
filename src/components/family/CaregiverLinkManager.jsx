@@ -29,7 +29,7 @@ export default function CaregiverLinkManager({ familyMember }) {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser);
+    authApi.me().then(setCurrentUser);
   }, []);
 
   const { data: myFamilyMembers = [] } = useQuery({

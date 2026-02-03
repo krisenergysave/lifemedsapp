@@ -8,7 +8,7 @@ export default function TakenTodayWidget() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser);
+    authApi.me().then(setCurrentUser);
   }, []);
 
   // Fetch caregiver links to get linked patients

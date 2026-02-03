@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
+import authApi from '@/api/authApi';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -19,7 +20,7 @@ export default function Contact() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await authApi.isAuthenticated();
         if (isAuth) {
           navigate(createPageUrl('Dashboard'), { replace: true });
         }

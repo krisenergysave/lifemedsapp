@@ -19,7 +19,7 @@ export default function Features() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await authApi.isAuthenticated();
         if (isAuth) {
           navigate(createPageUrl('Dashboard'), { replace: true });
         }

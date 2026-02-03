@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ export default function StepSignup({ formData, updateFormData, nextStep }) {
   const [password, setPassword] = useState(formData.password || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,33 +27,24 @@ export default function StepSignup({ formData, updateFormData, nextStep }) {
     updateFormData({ email, password });
     
     try {
-      const { base44 } = await import('@/api/base44Client');
-      
-      // Create the user account first using register
-      try {
-        await base44.auth.register({ email, password });
-      } catch (signupErr) {
-        if (signupErr.message?.includes('already') || signupErr.message?.includes('exists')) {
+      // Create the user account using our API
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 409) {
           setError('An account with this email already exists. Please sign in instead.');
           setLoading(false);
           return;
         }
-        throw signupErr;
+        throw new Error(data.error || 'Failed to register');
       }
-      
-      // Wait a moment for user to be fully registered
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Now send verification code (user exists now)
-      const response = await base44.functions.invoke('sendVerificationCode', { 
-        email 
-      });
-      
-      if (response.data.success) {
-        nextStep();
-      } else {
-        setError('Failed to send verification code. Please try again.');
-      }
+
+      // Proceed to verification step
+      nextStep();
     } catch (err) {
       console.error('Signup error:', err);
       setError('Failed to create account. Please try again.');
@@ -127,11 +120,7 @@ export default function StepSignup({ formData, updateFormData, nextStep }) {
         Already have an account?{' '}
         <button
           type="button"
-          onClick={async () => {
-            const { base44 } = await import('@/api/base44Client');
-            const { createPageUrl } = await import('@/utils');
-            base44.auth.redirectToLogin(createPageUrl('Dashboard'));
-          }}
+          onClick={() => navigate('/Login')}
           className="text-sky-600 font-medium hover:text-sky-700">
           Sign in
         </button>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -34,7 +34,7 @@ export default function FamilyMembers() {
   });
 
   React.useEffect(() => {
-    base44.auth.me().then(setUser);
+    authApi.me().then(setUser);
   }, []);
 
   const { data: familyMembers = [] } = useQuery({

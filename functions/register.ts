@@ -1,4 +1,5 @@
-import { createVerificationCode } from './db.ts';
+import { hash } from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
+import { createUser, findUserByEmail, createVerificationCode } from './db.ts';
 
 async function sendEmail(to, subject, html) {
   const sendGridKey = Deno.env.get('SENDGRID_API_KEY');
@@ -27,37 +28,38 @@ Deno.serve(async (req) => {
   try {
     if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
-    const { email } = await req.json();
+    const { email, password, name } = await req.json();
+    if (!email || !password) return Response.json({ error: 'Missing parameters' }, { status: 400 });
 
-    if (!email) {
-      return Response.json({ error: 'Email is required' }, { status: 400 });
+    const existing = await findUserByEmail(email);
+    if (existing) {
+      return Response.json({ error: 'User already exists' }, { status: 409 });
     }
 
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    // Set expiration to 15 minutes from now
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const password_hash = await hash(password);
+    await createUser({ email, password_hash, name, email_verified: false });
 
+    // Generate verification code and email
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     await createVerificationCode({ email, code, expires_at: expiresAt, verified: false });
 
-    // Send email with verification code
     const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0ea5e9;">Welcome to Life-Meds!</h2>
+      <div style="font-family: Arial, sans-serif; max-width:600px;margin:0 auto;">
+        <h2 style="color:#0ea5e9">Verify your email</h2>
         <p>Your verification code is:</p>
-        <div style="background-color: #f0f9ff; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
-          <h1 style="color: #0ea5e9; font-size: 36px; letter-spacing: 8px; margin: 0;">${code}</h1>
+        <div style="background:#f0f9ff;padding:20px;text-align:center;border-radius:10px;margin:20px 0;">
+          <h1 style="color:#0ea5e9;font-size:36px;letter-spacing:8px;margin:0;">${code}</h1>
         </div>
         <p>This code will expire in 15 minutes.</p>
-        <p>If you didn't request this code, please ignore this email.</p>
       </div>
     `;
 
-    try { await sendEmail(email, 'Your Verification Code', html); } catch (emailError) { console.error('Email sending failed:', emailError); }
+    try { await sendEmail(email, 'Your verification code', html); } catch (e) { console.warn('Failed to send verification email', e); }
 
     return Response.json({ success: true });
   } catch (error) {
-    console.error('Error sending verification code:', error);
+    console.error('register error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

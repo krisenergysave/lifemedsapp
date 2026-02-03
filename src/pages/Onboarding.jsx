@@ -20,9 +20,12 @@ export default function Onboarding() {
   React.useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (isAuth) {
-          navigate(createPageUrl('Dashboard'), { replace: true });
+        const res = await fetch('/api/session', { credentials: 'include' });
+        if (res.ok) {
+          const json = await res.json();
+          if (json.authenticated) {
+            navigate(createPageUrl('Dashboard'), { replace: true });
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -51,20 +54,38 @@ export default function Onboarding() {
 
   const handleComplete = async () => {
     try {
-      // Sign in the user (already created in step 1)
-      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
-      
-      // Update user profile with collected data
-      await base44.auth.updateMe({
-        full_name: `${formData.firstName} ${formData.lastName}`,
-        sex: formData.sex,
-        date_of_birth: formData.dateOfBirth,
-        goals: formData.goals,
-        role: 'user',
-        subscription_status: 'trial',
-        trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      // Sign in the user using our API
+      const loginRes = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email: formData.email, password: formData.password })
       });
-      
+      if (!loginRes.ok) {
+        const { error } = await loginRes.json().catch(() => ({}));
+        throw new Error(error || 'Failed to sign in');
+      }
+
+      // Update user profile with collected data
+      const updateRes = await fetch('/api/updateMe', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          sex: formData.sex,
+          date_of_birth: formData.dateOfBirth,
+          goals: formData.goals,
+          role: 'user',
+          subscription_status: 'trial',
+          trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+        })
+      });
+      if (!updateRes.ok) {
+        const { error } = await updateRes.json().catch(() => ({}));
+        throw new Error(error || 'Failed to update profile');
+      }
+
       // Redirect to dashboard
       navigate(createPageUrl('Dashboard'));
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { BellRing, Bell, LogOut, User, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -50,9 +50,10 @@ export default function DashboardHeader({
   const logoUrl = projectConfig?.logo_url;
   const appName = projectConfig?.app_name || DEFAULT_APP_NAME;
 
+  const { logout } = useAuth();
   const handleLogout = async () => {
     try {
-      await base44.auth.logout(createPageUrl('Home'));
+      await logout();
     } catch (error) {
       console.error('Logout error:', error);
       window.location.href = createPageUrl('Home');

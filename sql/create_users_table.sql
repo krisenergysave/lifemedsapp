@@ -1,0 +1,14 @@
+-- Create users table for MySQL/MariaDB
+CREATE TABLE IF NOT EXISTS users (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  email VARCHAR(191) NOT NULL UNIQUE,
+  password_hash VARCHAR(255),
+  name VARCHAR(191),
+  email_verified BOOLEAN DEFAULT FALSE,
+  totp_secret VARCHAR(255),
+  two_factor_enabled BOOLEAN DEFAULT FALSE,
+  google_sub VARCHAR(191),
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

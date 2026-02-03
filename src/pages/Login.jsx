@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Lock, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
+
 import GoogleLoginButton from '@/components/Auth/GoogleLoginButton';
+import { useSearchParams } from 'react-router-dom';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,33 +16,72 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Forgot password UI state
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+
+  const [searchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('reset') === 'success') {
+      toast.success('Password has been reset. Please sign in.');
+    }
+  }, [searchParams]);
+
+  const handleSendPasswordReset = async () => {
+    if (!forgotEmail) return toast.error('Please enter your email');
+    try {
+      const res = await fetch('/api/sendPasswordReset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('If an account exists, a reset email has been sent');
+        setForgotOpen(false);
+        setForgotEmail('');
+      } else {
+        toast.error(data.error || 'Failed to send reset email');
+      }
+    } catch (err) {
+      console.error('Send reset error', err);
+      toast.error('Failed to send reset email');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
-      toast.success('Signed in successfully');
-      navigate(createPageUrl('Dashboard'));
-    } catch (err) {
-      console.error('Login error', err);
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json().catch(() => ({}));
 
-      // If server indicates 2FA is required, redirect to Verify2FA with email in state
-      const needs2FA = err?.data?.extra_data?.reason === '2fa_required'
-        || err?.data?.extra_data?.requires_totp
-        || err?.data?.extra_data?.two_factor_required
-        || err?.status === 412;
-
-      if (needs2FA) {
-        navigate(createPageUrl('Verify2FA'), { state: { email } });
+      if (res.ok) {
+        if (data.requires2FA || res.status === 412) {
+          navigate(createPageUrl('Verify2FA'), { state: { email } });
+          return;
+        }
+        toast.success('Signed in successfully');
+        navigate(createPageUrl('Dashboard'));
         return;
       }
 
-      if (err?.status === 401) {
+      if (res.status === 401) {
         toast.error('Invalid email or password');
+      } else if (data && data.error) {
+        toast.error(data.error);
       } else {
         toast.error('Sign-in failed. Please try again.');
       }
+    } catch (err) {
+      console.error('Login error', err);
+      toast.error('Sign-in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -79,9 +119,18 @@ export default function Login() {
               required
             />
 
-            <Button type="submit" className="w-full h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </Button>
+            <div className="flex items-center justify-between">
+              <Button type="submit" className="w-auto h-12 bg-sky-600 hover:bg-sky-700 text-white font-semibold" disabled={isLoading}>
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => setForgotOpen(true)}
+                className="text-sm text-sky-600 hover:text-sky-700 font-semibold">
+                Forgot password?
+              </button>
+            </div>
           </form>
 
           <div className="my-4 text-center">
@@ -94,6 +143,29 @@ export default function Login() {
               Don't have an account? <a href={createPageUrl('Onboarding')} className="text-sky-600 font-semibold">Create one</a>
             </p>
           </div>
+
+          {/* Forgot password modal */}
+          {forgotOpen && (
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+              <div className="absolute inset-0 bg-black/40" onClick={() => setForgotOpen(false)} />
+              <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm z-10">
+                <h3 className="text-lg font-semibold mb-2">Reset your password</h3>
+                <p className="text-sm text-slate-600 mb-4">Enter your email and we'll send a secure reset link.</p>
+                <div className="space-y-3">
+                  <Input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button onClick={() => setForgotOpen(false)} variant="ghost">Cancel</Button>
+                    <Button onClick={handleSendPasswordReset} className="bg-sky-600 text-white">Send</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
       </motion.div>

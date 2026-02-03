@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, ChevronLeft } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 
 export default function StepVerifyEmail({ formData, nextStep, prevStep }) {
   const [code, setCode] = useState('');
@@ -18,18 +17,19 @@ export default function StepVerifyEmail({ formData, nextStep, prevStep }) {
     setError('');
     
     try {
-      const response = await base44.functions.invoke('verifyCode', { 
-        email: formData.email, 
-        code 
+      const res = await fetch('/api/verifyCode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, code })
       });
-      
-      if (response.data.success) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         nextStep();
       } else {
-        setError(response.data.error || 'Invalid or expired verification code');
+        setError(data.error || 'Invalid or expired verification code');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Invalid or expired verification code');
+      setError('Invalid or expired verification code');
       console.error(err);
     } finally {
       setLoading(false);
@@ -41,11 +41,13 @@ export default function StepVerifyEmail({ formData, nextStep, prevStep }) {
     setError('');
     
     try {
-      const response = await base44.functions.invoke('sendVerificationCode', { 
-        email: formData.email 
+      const res = await fetch('/api/sendVerificationCode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email })
       });
-      
-      if (response.data.success) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         alert('New verification code sent!');
       } else {
         setError('Failed to resend code');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,25 +35,27 @@ export default function Verify2FA() {
     setError('');
 
     try {
-      // Call backend function to verify TOTP
-      const response = await base44.functions.invoke('verifyUserTOTP', {
-        email: userEmail,
-        code,
+      const res = await fetch('/api/verifyUserTOTP', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, code })
       });
+      const data = await res.json().catch(() => ({}));
 
-      if (response.data.valid) {
+      if (res.ok && data.valid) {
         toast.success('Authentication successful!');
         // Redirect to dashboard
         navigate(createPageUrl('Dashboard'), { replace: true });
-      } else {
-        setAttempts(attempts + 1);
-        setError('Invalid code. Please try again.');
-        setCode('');
+        return;
+      }
 
-        if (attempts >= 4) {
-          toast.error('Too many failed attempts. Please try logging in again.');
-          setTimeout(() => navigate(createPageUrl('Home'), { replace: true }), 3000);
-        }
+      setAttempts(attempts + 1);
+      setError('Invalid code. Please try again.');
+      setCode('');
+
+      if (attempts >= 4) {
+        toast.error('Too many failed attempts. Please try logging in again.');
+        setTimeout(() => navigate(createPageUrl('Home'), { replace: true }), 3000);
       }
     } catch (err) {
       console.error(err);

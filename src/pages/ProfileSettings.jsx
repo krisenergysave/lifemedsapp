@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await authApi.me();
         setUser(currentUser);
         setFormData({
           full_name: currentUser.full_name || '',
@@ -58,7 +58,7 @@ export default function ProfileSettings() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
-      return base44.auth.updateMe(data);
+      return authApi.updateMe(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user'] });
@@ -315,7 +315,7 @@ export default function ProfileSettings() {
             onClose={() => setShowTwoFactorSetup(false)}
             onSuccess={() => {
               setShowTwoFactorSetup(false);
-              base44.auth.me().then(u => setUser(u));
+              authApi.me().then(u => setUser(u));
             }}
           />
         )}
@@ -334,9 +334,9 @@ function TwoFactorSetup({ onClose, onSuccess }) {
   useEffect(() => {
     const generateSecret = async () => {
       try {
-        const response = await base44.functions.invoke('generateTOTPSecret', {});
-        setSecret(response.data.secret);
-        setQrCode(response.data.qrCode);
+        const response = await authApi.generateTOTPSecret();
+        setSecret(response.secret);
+        setQrCode(response.qrCode);
       } catch (error) {
         toast.error('Failed to generate TOTP secret');
         console.error(error);
@@ -348,15 +348,12 @@ function TwoFactorSetup({ onClose, onSuccess }) {
   const handleVerify = async () => {
     setIsLoading(true);
     try {
-      const response = await base44.functions.invoke('verifyTOTPCode', {
-        code,
-        secret,
-      });
+      const response = await authApi.verifyTOTPCode({ code, secret });
 
-      if (response.data.valid) {
+      if (response.valid) {
         // Save 2FA to user
-        const user = await base44.auth.me();
-        await base44.auth.updateMe({
+        const user = await authApi.me();
+        await authApi.updateMe({
           two_factor_enabled: true,
           two_factor_method: 'totp',
           two_factor_secret: secret, // In production, encrypt this

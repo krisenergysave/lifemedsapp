@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -38,14 +38,14 @@ export default function AdminDashboard() {
   const [userRole, setUserRole] = useState('user');
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    authApi.me().then(user => {
       if (!user || user.role !== 'admin') {
         navigate(createPageUrl('Dashboard'));
         return;
       }
       setCurrentUser(user);
       // Update last_seen
-      base44.auth.updateMe({ last_seen: new Date().toISOString() }).catch(console.error);
+      authApi.updateMe({ last_seen: new Date().toISOString() }).catch(console.error);
     });
   }, [navigate]);
 

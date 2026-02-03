@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import Navbar from '../components/landing/Navbar';
 import Footer from '../components/landing/Footer';
 import { ChevronDown, HelpCircle } from 'lucide-react';
@@ -13,7 +13,7 @@ export default function FAQs() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await authApi.isAuthenticated();
         if (isAuth) {
           navigate(createPageUrl('Dashboard'), { replace: true });
         }

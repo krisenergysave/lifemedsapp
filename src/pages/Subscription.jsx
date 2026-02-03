@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import authApi from '@/api/authApi';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -24,11 +24,11 @@ export default function Subscription() {
   const [switchLoading, setSwitchLoading] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
+    authApi.me().then(user => {
       setUser(user);
       // Update last_seen
       if (user) {
-        base44.auth.updateMe({ last_seen: new Date().toISOString() }).catch(console.error);
+        authApi.updateMe({ last_seen: new Date().toISOString() }).catch(console.error);
       }
     });
   }, []);
@@ -94,7 +94,7 @@ export default function Subscription() {
 
       if (response.data?.success) {
         toast.success(`Successfully switched to ${newPlan} plan!`);
-        const updatedUser = await base44.auth.me();
+        const updatedUser = await authApi.me();
         setUser(updatedUser);
       }
     } catch (error) {
@@ -115,7 +115,7 @@ export default function Subscription() {
       if (response.data?.success) {
         toast.success('Subscription will be cancelled at the end of the billing period.');
         setShowCancelDialog(false);
-        const updatedUser = await base44.auth.me();
+        const updatedUser = await authApi.me();
         setUser(updatedUser);
       }
     } catch (error) {

@@ -6,6 +6,7 @@ import { Bell, BarChart3, Smartphone, Users, Heart, ChevronRight, Sparkles } fro
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import FeatureCard from '@/components/landing/FeatureCard';
+import GoogleLoginButton from '@/components/Auth/GoogleLoginButton';
 
 import { base44 } from '@/api/base44Client';
 
@@ -106,6 +107,15 @@ export default function Home() {
                     Start Free 14 Day Trial
                   </motion.button>
                 </Link>
+
+                {/* Google Sign-In */}
+                <div className="mt-4">
+                  <p className="text-sm text-slate-600 mb-2">Or sign in with</p>
+                  <div className="inline-block">
+                    {/* GoogleLoginButton inserted via component below */}
+                    <GoogleLoginButton />
+                  </div>
+                </div>
               </div>
             </motion.div>
 

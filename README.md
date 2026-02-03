@@ -160,3 +160,21 @@ Built on Base44 platform
 UI components from Shadcn/ui
 Icons by Lucide
 Inspired by the need for better medication adherence tools
+
+---
+
+## 🔐 Google OAuth (Frontend) ✅
+To enable Sign in with Google on the frontend:
+
+1. Add your Google client ID to a `.env` file at the project root:
+
+```
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
+
+2. The app now wraps `<App />` with `GoogleOAuthProvider` and includes a `GoogleLogin` button component at `src/components/Auth/GoogleLoginButton.jsx`.
+
+3. Implement a server endpoint (for example `/api/google-login`) that verifies the Google ID token (verify with Google's tokeninfo or the Google API), creates or looks up the user, and returns a session (or sets a cookie). The frontend `GoogleLoginButton` posts the token to this endpoint and redirects to `/dashboard` on success.
+
+If you want, I can also add an example server-side verification endpoint (Node/Express or a Deno function) to this repo. 
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Menu, X, Pill } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,9 +14,10 @@ export default function Navbar() {
   const [projectConfig, setProjectConfig] = useState(null);
   const [logoError, setLogoError] = useState(false);
 
+  const navigate = useNavigate();
   const handleSignIn = () => {
-    base44.auth.redirectToLogin();
-  };
+    navigate(createPageUrl('Login'));
+  }; 
 
   useEffect(() => {
     const fetchAppSettings = async () => {

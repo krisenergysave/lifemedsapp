@@ -14,6 +14,7 @@ obj/
 # 3. Environment & Secrets (CRITICAL for security)
 .env
 .env.local
+.env.example
 .env.development.local
 .env.test.local
 .env.production.local

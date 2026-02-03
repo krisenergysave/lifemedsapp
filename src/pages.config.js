@@ -74,6 +74,7 @@ import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Updates from './pages/Updates';
 import Verify2FA from './pages/Verify2FA';
+import Login from './pages/Login';
 
 
 export const PAGES = {
@@ -103,6 +104,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "Terms": Terms,
     "Updates": Updates,
+    "Login": Login,
     "Verify2FA": Verify2FA,
 }
 

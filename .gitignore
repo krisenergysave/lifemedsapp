@@ -1,0 +1,46 @@
+# 1. Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# 2. Build Outputs (The "Messy" files we generate)
+dist/
+build/
+.next/
+out/
+bin/
+obj/
+
+# 3. Environment & Secrets (CRITICAL for security)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+
+# 4. OS Specific (Junk files from Mac/Windows)
+.DS_Store
+Thumbs.db
+*.swp
+desktop.ini
+
+# 5. Capacitor & Mobile Specific
+# We keep the /android and /ios folders, but ignore the temporary builds
+ios/App/build/
+ios/App/Pods/
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captures/
+android/*.iml
+
+# 6. IDEs (VS Code / Android Studio / Xcode settings)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

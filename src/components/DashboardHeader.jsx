@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import entitiesApi from '@/api/entitiesApi';
 import { BellRing, Bell, LogOut, User, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -22,7 +23,7 @@ export default function DashboardHeader({
   useEffect(() => {
     const fetchAppSettings = async () => {
       try {
-        const settings = await base44.entities.AppSettings.list();
+        const settings = await entitiesApi.list('AppSettings');
         if (settings && settings.length > 0) {
           setProjectConfig(settings[0]);
         }

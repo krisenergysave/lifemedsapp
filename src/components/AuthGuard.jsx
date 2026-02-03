@@ -1,8 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
-
 /**
  * AuthGuard: Redirects authenticated users away from landing pages to Dashboard
  * Ensures session persistence - if user is logged in and refreshes a landing page,

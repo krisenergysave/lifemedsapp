@@ -18,6 +18,8 @@ import FeedbackDialog from '../components/dashboard/FeedbackDialog';
 import DashboardHeader from '../components/DashboardHeader';
 import CaregiverMonitor from '../components/dashboard/CaregiverMonitor';
 import TakenTodayWidget from '../components/dashboard/TakenTodayWidget';
+import entitiesApi from '@/api/entitiesApi';
+import functionsApi from '@/api/functionsApi';
 import { useSyncEngine } from '../components/hooks/useSyncEngine';
 
 export default function Dashboard() {
@@ -62,7 +64,7 @@ export default function Dashboard() {
 
   const { data: medications = [] } = useQuery({
     queryKey: ['medications'],
-    queryFn: () => base44.entities.Medication.list('-created_date'),
+    queryFn: () => entitiesApi.list('Medication', { sort: '-created_date' }),
   });
 
   const { data: logs = [] } = useQuery({
@@ -77,13 +79,13 @@ export default function Dashboard() {
     queryKey: ['family-members'],
     queryFn: async () => {
       const currentUser = await authApi.me();
-      return base44.entities.FamilyMember.filter({ created_by: currentUser.email });
+      return entitiesApi.filter('FamilyMember', { created_by: currentUser.email });
     },
   });
 
   const { data: healthData = [] } = useQuery({
     queryKey: ['health-data-recent'],
-    queryFn: () => base44.entities.HealthTracker.list('-measured_at', 100),
+    queryFn: () => entitiesApi.list('HealthTracker', { sort: '-measured_at', limit: 100 }),
   });
 
   const logMutation = useMutation({
@@ -146,7 +148,7 @@ export default function Dashboard() {
 
     // Notify caregivers
     try {
-      await base44.functions.invoke('notifyCaregivers', {
+      await functionsApi.notifyCaregivers({
         medicationLog: scheduleItem.log || logResult,
         medication: scheduleItem.medication,
         familyMemberId: scheduleItem.medication.family_member_id || 'self',

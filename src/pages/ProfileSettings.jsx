@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import authApi from '@/api/authApi';
+import entitiesApi from '@/api/entitiesApi';
+import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -44,7 +46,7 @@ export default function ProfileSettings() {
         });
 
         // Fetch user devices
-        const userDevices = await base44.entities.UserDevice.filter({
+        const userDevices = await entitiesApi.filter('UserDevice', {
           user_email: currentUser.email
         });
         setDevices(userDevices);
@@ -72,7 +74,7 @@ export default function ProfileSettings() {
 
   const deleteDeviceMutation = useMutation({
     mutationFn: async (deviceId) => {
-      return base44.entities.UserDevice.delete(deviceId);
+      return entitiesApi.delete('UserDevice', deviceId);
     },
     onSuccess: () => {
       setDevices(devices.filter(d => d.id !== deletingDeviceId));
@@ -95,7 +97,7 @@ export default function ProfileSettings() {
           const deviceToken = await base44.notifications?.getDeviceToken?.();
           if (deviceToken) {
             // Save device
-            await base44.entities.UserDevice.create({
+            await entitiesApi.create('UserDevice', {
               user_email: user.email,
               device_token: deviceToken,
               device_type: /iPad|iPhone|iPod/.test(navigator.userAgent) ? 'ios' : 'android',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ export default function AddEntryModal({ open, onOpenChange, initialMetricType = 
   }, [open, initialMetricType]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.HealthTracker.create(data),
+    mutationFn: (data) => entitiesApi.create('HealthTracker', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-trackers'] });
       toast.success('Health entry added successfully');

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import Navbar from '@/components/landing/Navbar';
 import Footer from '@/components/landing/Footer';
 import authApi from '@/api/authApi';
-import { base44 } from '@/api/base44Client';
+import functionsApi from '@/api/functionsApi';
 import { toast } from 'sonner';
 
 export default function Contact() {
@@ -45,9 +45,9 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      const response = await base44.functions.invoke('sendContactMessage', formData);
+      const response = await functionsApi.sendContactMessage(formData);
       
-      if (response.data.success) {
+      if (response && response.success !== false) {
         setSubmitted(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
         toast.success('Message sent! We will get back to you shortly.');

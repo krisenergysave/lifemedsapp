@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -23,11 +23,11 @@ export default function Appointments() {
 
   const { data: appointments = [] } = useQuery({
     queryKey: ['appointments'],
-    queryFn: () => base44.entities.Appointment.list('-appointment_date'),
+    queryFn: () => entitiesApi.list('Appointment', { sort: '-appointment_date' }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Appointment.delete(id),
+    mutationFn: (id) => entitiesApi.delete('Appointment', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },

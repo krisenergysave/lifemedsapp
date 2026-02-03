@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useOfflineStore } from './useOfflineStore';
 import { toast } from 'sonner';
 import { networkBridge } from '../utils/nativeBridge';
@@ -60,18 +60,18 @@ export const useSyncEngine = () => {
             }
 
             if (entity === 'MedicationLog') {
-              result = await base44.entities.MedicationLog.create(cleanData);
+              result = await entitiesApi.create('MedicationLog', cleanData);
               await offlineStore.updateSyncStatus('MedicationLog', data.id, 'synced');
             } else if (entity === 'HealthTracker') {
-              result = await base44.entities.HealthTracker.create(cleanData);
+              result = await entitiesApi.create('HealthTracker', cleanData);
               await offlineStore.updateSyncStatus('HealthTracker', data.id, 'synced');
             }
           } else if (operation === 'update') {
             if (entity === 'MedicationLog' && !cleanData.id.startsWith('temp_')) {
-              result = await base44.entities.MedicationLog.update(cleanData.id, cleanData);
+              result = await entitiesApi.update('MedicationLog', cleanData.id, cleanData);
               await offlineStore.updateSyncStatus('MedicationLog', data.id, 'synced');
             } else if (entity === 'HealthTracker' && !cleanData.id.startsWith('temp_')) {
-              result = await base44.entities.HealthTracker.update(cleanData.id, cleanData);
+              result = await entitiesApi.update('HealthTracker', cleanData.id, cleanData);
               await offlineStore.updateSyncStatus('HealthTracker', data.id, 'synced');
             }
           }
@@ -115,7 +115,7 @@ export const useSyncEngine = () => {
     const networkStatus = await networkBridge.getStatus();
     if (networkStatus.connected) {
       try {
-        const result = await base44.entities.MedicationLog.create(logData);
+        const result = await entitiesApi.create('MedicationLog', logData);
         await offlineStore.saveMedicationLogLocally({ ...result, syncStatus: 'synced', isOffline: false });
         return result;
       } catch (error) {
@@ -142,7 +142,7 @@ export const useSyncEngine = () => {
 
     if (networkStatus.connected && !id.startsWith('temp_')) {
       try {
-        const result = await base44.entities.MedicationLog.update(id, logData);
+        const result = await entitiesApi.update('MedicationLog', id, logData);
         await offlineStore.saveMedicationLogLocally({ ...result, syncStatus: 'synced', isOffline: false });
         return result;
       } catch (error) {
@@ -167,7 +167,7 @@ export const useSyncEngine = () => {
     const networkStatus = await networkBridge.getStatus();
     if (networkStatus.connected) {
       try {
-        const result = await base44.entities.HealthTracker.create(healthData);
+        const result = await entitiesApi.create('HealthTracker', healthData);
         await offlineStore.saveHealthTrackerLocally({ ...result, syncStatus: 'synced', isOffline: false });
         return result;
       } catch (error) {
@@ -192,7 +192,7 @@ export const useSyncEngine = () => {
     const networkStatus = await networkBridge.getStatus();
     if (networkStatus.connected) {
       try {
-        const remoteLogs = await base44.entities.MedicationLog.filter({});
+        const remoteLogs = await entitiesApi.filter('MedicationLog', {});
         return await offlineStore.mergeData('MedicationLog', remoteLogs);
       } catch (error) {
         console.error('Failed to load remote logs, using local:', error);
@@ -208,7 +208,7 @@ export const useSyncEngine = () => {
     const networkStatus = await networkBridge.getStatus();
     if (networkStatus.connected) {
       try {
-        const remoteTrackers = await base44.entities.HealthTracker.list('-measured_at', 100);
+        const remoteTrackers = await entitiesApi.list('HealthTracker', { sort: '-measured_at', limit: 100 });
         return await offlineStore.mergeData('HealthTracker', remoteTrackers);
       } catch (error) {
         console.error('Failed to load remote trackers, using local:', error);

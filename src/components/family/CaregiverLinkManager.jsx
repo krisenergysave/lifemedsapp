@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,12 +36,12 @@ export default function CaregiverLinkManager({ familyMember }) {
   const { data: myFamilyMembers = [] } = useQuery({
     queryKey: ['my-family-members-with-accounts'],
     queryFn: async () => {
-      const members = await base44.entities.FamilyMember.filter({ created_by: currentUser.email });
+      const members = await entitiesApi.filter('FamilyMember', { created_by: currentUser.email });
       // Filter to only members who have an email set
       const membersWithEmail = members.filter(m => m.email);
       
       // Verify those emails exist as users
-      const allUsers = await base44.entities.User.list();
+      const allUsers = await entitiesApi.list('User');
       const userEmails = allUsers.map(u => u.email);
       
       return membersWithEmail.filter(m => userEmails.includes(m.email));
@@ -50,13 +51,13 @@ export default function CaregiverLinkManager({ familyMember }) {
 
   const { data: caregiverLinks = [] } = useQuery({
     queryKey: ['caregiver-links', familyMember.id],
-    queryFn: () => base44.entities.CaregiverLink.filter({
+    queryFn: () => entitiesApi.filter('CaregiverLink', {
       patient_family_member_id: familyMember.id
     }),
   });
 
   const createLinkMutation = useMutation({
-    mutationFn: (data) => base44.entities.CaregiverLink.create(data),
+    mutationFn: (data) => entitiesApi.create('CaregiverLink', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['caregiver-links'] });
       toast.success('Caregiver added successfully');
@@ -74,7 +75,7 @@ export default function CaregiverLinkManager({ familyMember }) {
   });
 
   const deleteLinkMutation = useMutation({
-    mutationFn: (id) => base44.entities.CaregiverLink.delete(id),
+    mutationFn: (id) => entitiesApi.delete('CaregiverLink', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['caregiver-links'] });
       toast.success('Caregiver removed');

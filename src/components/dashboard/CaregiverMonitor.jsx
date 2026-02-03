@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { motion } from 'framer-motion';
 import { Users, Bell, Check, X, Clock, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -11,23 +11,23 @@ import { Button } from '@/components/ui/button';
 export default function CaregiverMonitor() {
   const { data: caregiverLinks = [] } = useQuery({
     queryKey: ['caregiver-links'],
-    queryFn: () => base44.entities.CaregiverLink.filter({ status: 'active' }),
+    queryFn: () => entitiesApi.filter('CaregiverLink', { status: 'active' }),
   });
 
   const { data: familyMembers = [] } = useQuery({
     queryKey: ['family-members'],
-    queryFn: () => base44.entities.FamilyMember.list(),
+    queryFn: () => entitiesApi.list('FamilyMember'),
   });
 
   const { data: allMedications = [] } = useQuery({
     queryKey: ['all-medications-caregiver'],
-    queryFn: () => base44.entities.Medication.list('-created_date'),
+    queryFn: () => entitiesApi.list('Medication', { sort: '-created_date' }),
     enabled: caregiverLinks.length > 0,
   });
 
   const { data: allLogs = [] } = useQuery({
     queryKey: ['all-logs-caregiver'],
-    queryFn: () => base44.entities.MedicationLog.list('-scheduled_time', 50),
+    queryFn: () => entitiesApi.list('MedicationLog', { sort: '-scheduled_time', limit: 50 }),
     enabled: caregiverLinks.length > 0,
   });
 

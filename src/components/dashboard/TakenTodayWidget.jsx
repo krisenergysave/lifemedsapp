@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { CircleCheck, CircleAlert, CircleX } from 'lucide-react';
@@ -14,7 +14,7 @@ export default function TakenTodayWidget() {
   // Fetch caregiver links to get linked patients
   const { data: caregiverLinks = [] } = useQuery({
     queryKey: ['caregiver-links'],
-    queryFn: () => base44.entities.CaregiverLink.filter({ 
+    queryFn: () => entitiesApi.filter('CaregiverLink', { 
       caregiver_email: currentUser?.email,
       status: 'active'
     }),
@@ -24,7 +24,7 @@ export default function TakenTodayWidget() {
   // Fetch family members to get patient details
   const { data: familyMembers = [] } = useQuery({
     queryKey: ['family-members-for-caregiver'],
-    queryFn: () => base44.entities.FamilyMember.list(),
+    queryFn: () => entitiesApi.list('FamilyMember'),
     enabled: caregiverLinks.length > 0,
   });
 
@@ -32,7 +32,7 @@ export default function TakenTodayWidget() {
   const { data: medications = [], refetch: refetchMedications } = useQuery({
     queryKey: ['medications-adherence'],
     queryFn: async () => {
-      const userMeds = await base44.entities.Medication.filter({ created_by: currentUser?.email });
+      const userMeds = await entitiesApi.filter('Medication', { created_by: currentUser?.email });
       
       // Get medications for linked patients
       const linkedPatientIds = caregiverLinks.map(link => link.patient_family_member_id);
@@ -47,21 +47,17 @@ export default function TakenTodayWidget() {
   const { data: logs = [], refetch: refetchLogs } = useQuery({
     queryKey: ['logs-today-adherence'],
     queryFn: async () => {
-      const allLogs = await base44.entities.MedicationLog.list();
+      const allLogs = await entitiesApi.list('MedicationLog');
       const today = new Date().toDateString();
       return allLogs.filter(log => new Date(log.scheduled_time).toDateString() === today);
     },
   });
 
-  // Subscribe to real-time updates
+  // Subscribe to real-time updates (no-op fallback until real-time implemented)
   useEffect(() => {
-    const unsubscribeLogs = base44.entities.MedicationLog.subscribe((event) => {
-      refetchLogs();
-    });
+    const unsubscribeLogs = entitiesApi.subscribe('MedicationLog', () => refetchLogs());
 
-    const unsubscribeMeds = base44.entities.Medication.subscribe((event) => {
-      refetchMedications();
-    });
+    const unsubscribeMeds = entitiesApi.subscribe('Medication', () => refetchMedications());
 
     return () => {
       unsubscribeLogs();

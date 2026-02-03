@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import functionsApi from '@/api/functionsApi';
 
 export default function Subscription() {
   const navigate = useNavigate();
@@ -47,13 +48,13 @@ export default function Subscription() {
     setCouponError('');
     
     try {
-      const { data } = await base44.functions.invoke('validateCoupon', { code: couponCode });
-      if (data.valid) {
-        setCouponData(data.discount);
+      const res = await functionsApi.validateCoupon(couponCode);
+      if (res?.valid) {
+        setCouponData(res.discount);
         setCouponError('');
       }
     } catch (error) {
-      setCouponError(error.response?.data?.error || 'Invalid coupon code');
+      setCouponError(error?.data?.error || 'Invalid coupon code');
       setCouponData(null);
     } finally {
       setValidatingCoupon(false);
@@ -68,10 +69,10 @@ export default function Subscription() {
       if (couponData?.id) {
         payload.promotionCode = couponData.id;
       }
-      const response = await base44.functions.invoke('createCheckoutSession', payload);
+      const response = await functionsApi.createCheckoutSession(payload);
       
-      if (response.data?.url) {
-        window.location.href = response.data.url;
+      if (response?.url) {
+        window.location.href = response.url;
       } else {
         throw new Error('No checkout URL received');
       }
@@ -87,12 +88,12 @@ export default function Subscription() {
     setSwitchLoading(true);
     try {
       const newPlan = user.current_plan === 'monthly' ? 'yearly' : 'monthly';
-      const response = await base44.functions.invoke('handleSubscriptionChange', {
+      const response = await functionsApi.handleSubscriptionChange({
         action: 'switch_plan',
         new_plan: newPlan
       });
 
-      if (response.data?.success) {
+      if (response?.success) {
         toast.success(`Successfully switched to ${newPlan} plan!`);
         const updatedUser = await authApi.me();
         setUser(updatedUser);
@@ -108,11 +109,11 @@ export default function Subscription() {
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
     try {
-      const response = await base44.functions.invoke('handleSubscriptionChange', {
+      const response = await functionsApi.handleSubscriptionChange({
         action: 'cancel'
       });
 
-      if (response.data?.success) {
+      if (response?.success) {
         toast.success('Subscription will be cancelled at the end of the billing period.');
         setShowCancelDialog(false);
         const updatedUser = await authApi.me();

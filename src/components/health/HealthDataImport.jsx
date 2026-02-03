@@ -3,7 +3,7 @@ import { Upload, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { base44 } from '@/api/base44Client';
+import functionsApi from '@/api/functionsApi';
 
 export default function HealthDataImport({ onImportComplete }) {
   const [file, setFile] = useState(null);
@@ -30,14 +30,14 @@ export default function HealthDataImport({ onImportComplete }) {
       formData.append('file', file);
       formData.append('source', source);
 
-      const response = await base44.functions.invoke('importHealthData', formData);
+      const response = await functionsApi.importHealthData(formData);
 
-      if (response.data.success) {
-        setResult({ success: true, message: response.data.message });
+      if (response.success) {
+        setResult({ success: true, message: response.message });
         setFile(null);
         if (onImportComplete) onImportComplete();
       } else {
-        setResult({ success: false, message: response.data.error });
+        setResult({ success: false, message: response.message || 'Import failed' });
       }
     } catch (error) {
       setResult({ success: false, message: 'Failed to import data. Please check your file format.' });

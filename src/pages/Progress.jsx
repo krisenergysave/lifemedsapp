@@ -1,5 +1,4 @@
 import React from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import entitiesApi from '@/api/entitiesApi';
 import { useNavigate } from 'react-router-dom';

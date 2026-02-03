@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -26,7 +26,7 @@ export default function AddAppointment() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Appointment.create(data),
+    mutationFn: (data) => entitiesApi.create('Appointment', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
       navigate(createPageUrl('Appointments'));

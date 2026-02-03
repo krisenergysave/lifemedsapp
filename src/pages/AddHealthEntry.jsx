@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -42,7 +42,7 @@ export default function AddHealthEntry() {
   const selectedTracker = trackerTypes.find(t => t.id === formData.tracker_type);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.HealthTracker.create(data),
+    mutationFn: (data) => entitiesApi.create('HealthTracker', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['health-trackers'] });
       navigate(createPageUrl('HealthTrackers'));

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Menu, X, Pill } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 
 const DEFAULT_LOGO = '🏥';
 const DEFAULT_APP_NAME = 'Life-Meds.com';
@@ -22,7 +22,7 @@ export default function Navbar() {
   useEffect(() => {
     const fetchAppSettings = async () => {
       try {
-        const settings = await base44.entities.AppSettings.list();
+        const settings = await entitiesApi.list('AppSettings');
         if (settings && settings.length > 0) {
           setProjectConfig(settings[0]);
         }

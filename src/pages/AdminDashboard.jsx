@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { format, addDays, addMonths, addYears } from 'date-fns';
 import { toast } from 'sonner';
+import functionsApi from '@/api/functionsApi';
 import { Toaster } from '@/components/ui/sonner';
 
 export default function AdminDashboard() {
@@ -52,8 +53,8 @@ export default function AdminDashboard() {
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['all-users'],
     queryFn: async () => {
-      const response = await base44.functions.invoke('listAllUsers');
-      return response.data.users || [];
+      const response = await functionsApi.listAllUsers();
+      return response.users || [];
     },
     enabled: !!currentUser && currentUser.role === 'admin',
     retry: 1
@@ -69,7 +70,7 @@ export default function AdminDashboard() {
 
   const updatePlanMutation = useMutation({
     mutationFn: async (data) => {
-      return base44.functions.invoke('adminUpdateUserPlan', data);
+      return functionsApi.adminUpdateUserPlan(data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (email) => {
-      return base44.functions.invoke('adminDeleteUser', { user_email: email });
+      return functionsApi.adminDeleteUser({ user_email: email });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });

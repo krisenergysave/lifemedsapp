@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import functionsApi from '@/api/functionsApi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ export default function FeedbackDialog({ open, onOpenChange }) {
       const user = await authApi.me();
       
       // Send feedback via contact function
-      await base44.functions.invoke('sendContactMessage', {
+      await functionsApi.sendContactMessage({
         name: user.full_name || user.email,
         email: user.email,
         subject: `Feedback: ${subject}`,

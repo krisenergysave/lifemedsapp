@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -44,12 +44,12 @@ export default function AddMedication() {
 
   const { data: familyMembers = [] } = useQuery({
     queryKey: ['family-members'],
-    queryFn: () => base44.entities.FamilyMember.list(),
+    queryFn: () => entitiesApi.list('FamilyMember'),
   });
 
   const { data: masterMedications = [], isLoading: loadingMedications } = useQuery({
     queryKey: ['master-medications'],
-    queryFn: () => base44.entities.MasterMedications.list(),
+    queryFn: () => entitiesApi.list('MasterMedications'),
   });
 
   const filteredMedications = useMemo(() => {
@@ -68,7 +68,7 @@ export default function AddMedication() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Medication.create(data),
+    mutationFn: (data) => entitiesApi.create('Medication', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
       navigate(createPageUrl('Dashboard'));

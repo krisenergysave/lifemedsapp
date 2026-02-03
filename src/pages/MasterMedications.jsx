@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
+import entitiesApi from '@/api/entitiesApi';
 
 export default function MasterMedications() {
   const navigate = useNavigate();
@@ -42,12 +43,12 @@ export default function MasterMedications() {
 
   const { data: medications = [], isLoading } = useQuery({
     queryKey: ['master-medications'],
-    queryFn: () => base44.entities.MasterMedications.list('-name'),
+    queryFn: () => entitiesApi.list('MasterMedications', { sort: '-name' }),
     enabled: !!currentUser && currentUser.role === 'admin',
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.MasterMedications.create(data),
+    mutationFn: (data) => entitiesApi.create('MasterMedications', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['master-medications'] });
       toast.success('Medication added successfully');
@@ -60,7 +61,7 @@ export default function MasterMedications() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.MasterMedications.update(id, data),
+    mutationFn: ({ id, data }) => entitiesApi.update('MasterMedications', id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['master-medications'] });
       toast.success('Medication updated successfully');
@@ -73,7 +74,7 @@ export default function MasterMedications() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.MasterMedications.delete(id),
+    mutationFn: (id) => entitiesApi.delete('MasterMedications', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['master-medications'] });
       toast.success('Medication deleted successfully');

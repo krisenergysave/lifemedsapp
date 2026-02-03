@@ -1,6 +1,7 @@
 import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import entitiesApi from '@/api/entitiesApi';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -13,12 +14,12 @@ export default function Progress() {
 
   const { data: logs = [] } = useQuery({
     queryKey: ['all-logs'],
-    queryFn: () => base44.entities.MedicationLog.list('-scheduled_time', 100),
+    queryFn: () => entitiesApi.list('MedicationLog', { sort: '-scheduled_time', limit: 100 }),
   });
 
   const { data: medications = [] } = useQuery({
     queryKey: ['medications'],
-    queryFn: () => base44.entities.Medication.list(),
+    queryFn: () => entitiesApi.list('Medication'),
   });
 
   // Calculate stats for last 7 days

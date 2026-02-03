@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import entitiesApi from '@/api/entitiesApi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -39,21 +39,21 @@ export default function FamilyMemberDetail() {
   const { data: member, isLoading: loadingMember } = useQuery({
     queryKey: ['family-member', memberId],
     queryFn: async () => {
-      const members = await base44.entities.FamilyMember.filter({ id: memberId });
-      return members[0];
+      const members = await entitiesApi.filter('FamilyMember', { id: memberId });
+      return (members && members.length) ? members[0] : null;
     },
     enabled: !!memberId
   });
 
   const { data: medications = [] } = useQuery({
     queryKey: ['family-medications', memberId],
-    queryFn: () => base44.entities.Medication.filter({ family_member_id: memberId }),
+    queryFn: () => entitiesApi.filter('Medication', { family_member_id: memberId }),
     enabled: !!memberId
   });
 
   const { data: observations = [] } = useQuery({
     queryKey: ['family-observations', memberId],
-    queryFn: () => base44.entities.FamilyObservation.filter({ family_member_id: memberId }),
+    queryFn: () => entitiesApi.filter('FamilyObservation', { family_member_id: memberId }),
     enabled: !!memberId
   });
 
@@ -62,13 +62,13 @@ export default function FamilyMemberDetail() {
     queryFn: async () => {
       const medIds = medications.map(m => m.id);
       if (medIds.length === 0) return [];
-      return base44.entities.MedicationLog.filter({});
+      return entitiesApi.filter('MedicationLog', {});
     },
     enabled: medications.length > 0
   });
 
   const createObservationMutation = useMutation({
-    mutationFn: (data) => base44.entities.FamilyObservation.create(data),
+    mutationFn: (data) => entitiesApi.create('FamilyObservation', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-observations', memberId] });
       setShowObservationModal(false);
@@ -77,7 +77,7 @@ export default function FamilyMemberDetail() {
   });
 
   const updateObservationMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.FamilyObservation.update(id, data),
+    mutationFn: ({ id, data }) => entitiesApi.update('FamilyObservation', id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-observations', memberId] });
       setShowObservationModal(false);
@@ -87,14 +87,14 @@ export default function FamilyMemberDetail() {
   });
 
   const deleteObservationMutation = useMutation({
-    mutationFn: (id) => base44.entities.FamilyObservation.delete(id),
+    mutationFn: (id) => entitiesApi.delete('FamilyObservation', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-observations', memberId] });
     }
   });
 
   const updateMemberMutation = useMutation({
-    mutationFn: (data) => base44.entities.FamilyMember.update(memberId, data),
+    mutationFn: (data) => entitiesApi.update('FamilyMember', memberId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-member', memberId] });
       queryClient.invalidateQueries({ queryKey: ['family-members'] });

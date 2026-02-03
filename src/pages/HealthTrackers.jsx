@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import entitiesApi from '@/api/entitiesApi';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
@@ -30,7 +30,7 @@ export default function HealthTrackers() {
 
   const { data: trackers = [] } = useQuery({
     queryKey: ['health-trackers'],
-    queryFn: () => base44.entities.HealthTracker.list('-created_date'),
+    queryFn: () => entitiesApi.list('HealthTracker', { sort: '-created_date' }),
   });
 
   const trackerTypes = [

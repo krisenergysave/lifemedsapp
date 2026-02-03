@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import entitiesApi from '@/api/entitiesApi';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -54,7 +54,7 @@ export default function EditMedication() {
   const { data: medication, isLoading } = useQuery({
     queryKey: ['medication', medicationId],
     queryFn: async () => {
-      const meds = await base44.entities.Medication.list();
+      const meds = await entitiesApi.list('Medication');
       return meds.find(m => m.id === medicationId);
     },
     enabled: !!medicationId
@@ -62,7 +62,7 @@ export default function EditMedication() {
 
   const { data: familyMembers = [] } = useQuery({
     queryKey: ['family-members'],
-    queryFn: () => base44.entities.FamilyMember.list(),
+    queryFn: () => entitiesApi.list('FamilyMember'),
   });
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function EditMedication() {
   }, [medication]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.entities.Medication.update(medicationId, data),
+    mutationFn: (data) => entitiesApi.update('Medication', medicationId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
       queryClient.invalidateQueries({ queryKey: ['medication', medicationId] });
@@ -98,7 +98,7 @@ export default function EditMedication() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Medication.delete(medicationId),
+    mutationFn: () => entitiesApi.delete('Medication', medicationId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['medications'] });
       navigate(createPageUrl('MedicationsList'));

@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { format, isToday, isPast, parseISO } from 'date-fns';
 import { toast } from 'sonner';
+import entitiesApi from '@/api/entitiesApi';
 
 export default function Reminders() {
   const navigate = useNavigate();
@@ -37,25 +38,26 @@ export default function Reminders() {
 
   const { data: medications = [] } = useQuery({
     queryKey: ['medications'],
-    queryFn: () => base44.entities.Medication.list('-created_date'),
+    queryFn: () => entitiesApi.list('Medication', { sort: '-created_date' }),
   });
 
   const { data: logs = [] } = useQuery({
     queryKey: ['logs-today'],
     queryFn: async () => {
-      return base44.entities.MedicationLog.filter({});
+      const res = await entitiesApi.filter('MedicationLog', {});
+      return res || [];
     },
   });
 
   const updateLogMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.MedicationLog.update(id, data),
+    mutationFn: ({ id, data }) => entitiesApi.update('MedicationLog', id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logs-today'] });
     },
   });
 
   const createLogMutation = useMutation({
-    mutationFn: (logData) => base44.entities.MedicationLog.create(logData),
+    mutationFn: (logData) => entitiesApi.create('MedicationLog', logData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['logs-today'] });
     },

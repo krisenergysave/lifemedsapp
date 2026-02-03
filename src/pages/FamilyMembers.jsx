@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import authApi from '@/api/authApi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import entitiesApi from '@/api/entitiesApi';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -41,15 +42,15 @@ export default function FamilyMembers() {
     queryKey: ['family-members', showAll],
     queryFn: async () => {
       if (showAll && user?.role === 'admin') {
-        return base44.entities.FamilyMember.list();
+        return entitiesApi.list('FamilyMember');
       }
-      return base44.entities.FamilyMember.filter({ created_by: user.email });
+      return entitiesApi.filter('FamilyMember', { created_by: user.email });
     },
     enabled: !!user,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.FamilyMember.create(data),
+    mutationFn: (data) => entitiesApi.create('FamilyMember', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-members'] });
       setOpen(false);
@@ -70,7 +71,7 @@ export default function FamilyMembers() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.FamilyMember.delete(id),
+    mutationFn: (id) => entitiesApi.delete('FamilyMember', id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['family-members'] });
     },
